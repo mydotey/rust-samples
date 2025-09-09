@@ -1,6 +1,9 @@
 use anyhow::Result;
 use eframe::egui;
+use egui_extras::image::load_svg_bytes;
 use std::collections::HashMap;
+use std::env;
+use std::path::PathBuf;
 
 fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions {
@@ -262,9 +265,10 @@ impl eframe::App for ChineseChessApp {
                             Player::Black => egui::Color32::BLACK,
                         };
 
-                        painter.circle_filled(egui::pos2(x, y), cell_size * 0.4, color);
+                        // Draw colored circle background first
+                        painter.circle_filled(egui::pos2(x, y), cell_size * 0.45, color);
 
-                        // Draw piece using image texture
+                        // Draw piece using image texture on top of the colored circle
                         let texture_name = match (piece.player, piece.piece_type) {
                             (Player::Red, PieceType::General) => "red_general",
                             (Player::Red, PieceType::Advisor) => "red_advisor",
@@ -283,8 +287,24 @@ impl eframe::App for ChineseChessApp {
                         };
 
                         if let Some(texture) = self.textures.get(texture_name) {
+                            println!(
+                                "Drawing texture: {} at position ({}, {}), texture size: {:?}",
+                                texture_name,
+                                x,
+                                y,
+                                texture.size()
+                            );
                             let size = egui::vec2(cell_size * 0.8, cell_size * 0.8);
                             let rect = egui::Rect::from_center_size(egui::pos2(x, y), size);
+                            println!("Drawing rect: {:?}", rect);
+
+                            // Draw a debug rectangle around the image area
+                            painter.rect_stroke(
+                                rect,
+                                0.0,
+                                egui::Stroke::new(1.0, egui::Color32::GREEN),
+                            );
+
                             painter.image(
                                 texture.id(),
                                 rect,
@@ -294,6 +314,8 @@ impl eframe::App for ChineseChessApp {
                                 ),
                                 egui::Color32::WHITE,
                             );
+                        } else {
+                            println!("Texture not found: {}", texture_name);
                         }
                     }
                 }
@@ -357,188 +379,66 @@ impl ChineseChessApp {
         ];
 
         for name in piece_names {
-            let size = 64;
-            let mut image = egui::ColorImage::new([size, size], egui::Color32::TRANSPARENT);
+            // Get the path to the assets directory relative to the executable
+            let mut svg_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+            svg_path.push("assets");
+            svg_path.push("images");
+            svg_path.push(format!("{}.svg", name));
 
-            // Determine colors based on piece name
-            let (circle_color, text_color) = if name.starts_with("red") {
-                (egui::Color32::RED, egui::Color32::WHITE)
+            // Create a simple test texture instead of loading SVG
+            // Try to load SVG file
+            if let Ok(svg_bytes) = std::fs::read(&svg_path) {
+                println!("Loading SVG file: {:?}", svg_path);
+                match load_svg_bytes(&svg_bytes) {
+                    Ok(image) => {
+                        let texture = ctx.load_texture(name, image, egui::TextureOptions::LINEAR);
+                        self.textures.insert(name.to_string(), texture);
+                        println!("Successfully loaded SVG texture for: {}", name);
+                    }
+                    Err(e) => {
+                        println!("Failed to load SVG for {}: {:?}", name, e);
+                        // Fallback to test texture
+                        self.create_test_texture(ctx, name);
+                    }
+                }
             } else {
-                (egui::Color32::BLACK, egui::Color32::WHITE)
-            };
-
-            let center = size as f32 / 2.0;
-            let radius = size as f32 / 2.5;
-
-            // Draw colored circle
-            for y in 0..size {
-                for x in 0..size {
-                    let dx = x as f32 - center;
-                    let dy = y as f32 - center;
-                    if dx * dx + dy * dy <= radius * radius {
-                        image[(x as usize, y as usize)] = circle_color;
-                    }
-                }
+                println!("SVG file not found: {:?}, using test texture", svg_path);
+                // Fallback to test texture
+                self.create_test_texture(ctx, name);
             }
-
-            // Get Chinese character for the piece
-            let chinese_char = match name {
-                "red_general" => "帥",    // Red General
-                "black_general" => "將",  // Black General
-                "red_advisor" => "仕",    // Red Advisor
-                "black_advisor" => "士",  // Black Advisor
-                "red_elephant" => "相",   // Red Elephant
-                "black_elephant" => "象", // Black Elephant
-                "red_horse" => "傌",      // Red Horse
-                "black_horse" => "馬",    // Black Horse
-                "red_chariot" => "俥",    // Red Chariot
-                "black_chariot" => "車",  // Black Chariot
-                "red_cannon" => "炮",     // Red Cannon
-                "black_cannon" => "砲",   // Black Cannon
-                "red_soldier" => "兵",    // Red Soldier
-                "black_soldier" => "卒",  // Black Soldier
-                _ => "?",
-            };
-
-            // Draw Chinese character using a simple block pattern for better visibility
-            // We'll create a large, bold representation of each character
-            let char_width = 20;
-            let char_height = 20;
-            let char_x = (center - char_width as f32 / 2.0) as usize;
-            let char_y = (center - char_height as f32 / 2.0) as usize;
-
-            // Draw a bold representation of each Chinese character
-            // Each character is represented by a unique pattern of filled blocks
-            match chinese_char {
-                "帥" | "將" => {
-                    // General - draw a square with center dot
-                    for y in 0..char_height {
-                        for x in 0..char_width {
-                            if (x < 3 || x > char_width - 4) && (y < 3 || y > char_height - 4) {
-                                image[(char_x + x, char_y + y)] = text_color;
-                            }
-                            if x >= char_width / 2 - 2
-                                && x <= char_width / 2 + 1
-                                && y >= char_height / 2 - 2
-                                && y <= char_height / 2 + 1
-                            {
-                                image[(char_x + x, char_y + y)] = text_color;
-                            }
-                        }
-                    }
-                }
-                "仕" | "士" => {
-                    // Advisor - draw a diamond shape
-                    for y in 0..char_height {
-                        for x in 0..char_width {
-                            let center_x = char_width as isize / 2;
-                            let center_y = char_height as isize / 2;
-                            if ((x as isize - center_x).abs() + (y as isize - center_y).abs()) <= 6
-                            {
-                                image[(char_x + x, char_y + y)] = text_color;
-                            }
-                        }
-                    }
-                }
-                "相" | "象" => {
-                    // Elephant - draw a large X shape
-                    for y in 0..char_height {
-                        for x in 0..char_width {
-                            if (x as isize - char_width as isize / 2).abs()
-                                == (y as isize - char_height as isize / 2).abs()
-                                || (x as isize - char_width as isize / 2).abs()
-                                    == (y as isize - char_height as isize / 2).abs() + 1
-                            {
-                                image[(char_x + x, char_y + y)] = text_color;
-                            }
-                        }
-                    }
-                }
-                "傌" | "馬" => {
-                    // Horse - draw an H-like shape
-                    for y in 0..char_height {
-                        for x in 0..char_width {
-                            if x < 3
-                                || x > char_width - 4
-                                || (y > char_height / 3
-                                    && y < 2 * char_height / 3
-                                    && x > char_width / 3
-                                    && x < 2 * char_width / 3)
-                            {
-                                image[(char_x + x, char_y + y)] = text_color;
-                            }
-                        }
-                    }
-                }
-                "俥" | "車" => {
-                    // Chariot - draw a plus sign
-                    for y in 0..char_height {
-                        for x in 0..char_width {
-                            if x == char_width / 2
-                                || y == char_height / 2
-                                || (x > char_width / 2 - 3
-                                    && x < char_width / 2 + 2
-                                    && y > char_height / 2 - 3
-                                    && y < char_height / 2 + 2)
-                            {
-                                image[(char_x + x, char_y + y)] = text_color;
-                            }
-                        }
-                    }
-                }
-                "炮" | "砲" => {
-                    // Cannon - draw a circle with dot
-                    for y in 0..char_height {
-                        for x in 0..char_width {
-                            let dx = x as f32 - char_width as f32 / 2.0;
-                            let dy = y as f32 - char_height as f32 / 2.0;
-                            if dx * dx + dy * dy <= 25.0 {
-                                // Circle
-                                image[(char_x + x, char_y + y)] = text_color;
-                            }
-                            if dx * dx + dy * dy <= 4.0 {
-                                // Center dot
-                                image[(char_x + x, char_y + y)] = text_color;
-                            }
-                        }
-                    }
-                }
-                "兵" | "卒" => {
-                    // Soldier - draw a simple cross
-                    for y in 0..char_height {
-                        for x in 0..char_width {
-                            if x == char_width / 2
-                                || y == char_height / 2
-                                || (x > char_width / 2 - 2
-                                    && x < char_width / 2 + 1
-                                    && y > char_height / 2 - 2
-                                    && y < char_height / 2 + 1)
-                            {
-                                image[(char_x + x, char_y + y)] = text_color;
-                            }
-                        }
-                    }
-                }
-                _ => {
-                    // Fallback - draw a question mark
-                    for y in 0..char_height {
-                        for x in 0..char_width {
-                            if (x == char_width / 2 && y < 3 * char_height / 4)
-                                || (y == 3 * char_height / 4
-                                    && x > char_width / 3
-                                    && x < 2 * char_width / 3)
-                                || (x + y == char_width && y > char_height / 2)
-                            {
-                                image[(char_x + x, char_y + y)] = text_color;
-                            }
-                        }
-                    }
-                }
-            }
-
-            let texture = ctx.load_texture(name, image, egui::TextureOptions::default());
-            self.textures.insert(name.to_string(), texture);
         }
+    }
+
+    fn create_test_texture(&mut self, ctx: &egui::Context, name: &str) {
+        // Create a more visible test pattern with different colors and patterns
+        let mut image = egui::ColorImage::new([100, 100], egui::Color32::TRANSPARENT);
+
+        // Different patterns based on piece type for better visibility
+        for y in 0..100 {
+            for x in 0..100 {
+                if name.contains("red") {
+                    // Red pieces - solid red background with white pattern
+                    image[(x, y)] = egui::Color32::RED;
+
+                    // Add white cross pattern for visibility
+                    if x == y || x == 99 - y || x == 50 || y == 50 {
+                        image[(x, y)] = egui::Color32::WHITE;
+                    }
+                } else {
+                    // Black pieces - solid blue background with yellow pattern
+                    image[(x, y)] = egui::Color32::BLUE;
+
+                    // Add yellow pattern for visibility (checkerboard)
+                    if (x / 20 + y / 20) % 2 == 0 {
+                        image[(x, y)] = egui::Color32::YELLOW;
+                    }
+                }
+            }
+        }
+
+        let texture = ctx.load_texture(name, image, egui::TextureOptions::LINEAR);
+        self.textures.insert(name.to_string(), texture);
+        println!("Created test texture for: {}", name);
     }
 
     fn handle_click(&mut self, row: usize, col: usize) {

@@ -23,6 +23,10 @@ name = "accesskit"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "74a4b14f3d99c1255dcba8f45621ab1a2e7540a0009652d33989005a4d0bfc6b"
+dependencies = [
+ "enumn",
+ "serde",
+]
 
 [[package]]
 name = "accesskit_consumer"
@@ -307,6 +311,7 @@ dependencies = [
  "cfg-if",
  "getrandom 0.3.3",
  "once_cell",
+ "serde",
  "version_check",
  "zerocopy",
 ]
@@ -1301,10 +1306,11 @@ dependencies = [
  "anyhow",
  "eframe",
  "egui",
+ "egui_extras",
  "image 0.25.8",
- "resvg",
+ "resvg 0.39.0",
  "tiny-skia",
- "usvg",
+ "usvg 0.39.0",
 ]
 
 [[package]]
@@ -1873,6 +1879,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "20930a432bbd57a6d55e07976089708d4893f3d556cf42a0d79e9e321fa73b10"
 dependencies = [
  "bytemuck",
+ "serde",
 ]
 
 [[package]]
@@ -1920,6 +1927,7 @@ dependencies = [
  "epaint",
  "log",
  "nohash-hasher",
+ "serde",
 ]
 
 [[package]]
@@ -1958,6 +1966,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "egui_extras"
+version = "0.27.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b78779f35ded1a853786c9ce0b43fe1053e10a21ea3b23ebea411805ce41593"
+dependencies = [
+ "egui",
+ "enum-map",
+ "log",
+ "mime_guess2",
+ "resvg 0.37.0",
+ "serde",
+]
+
+[[package]]
 name = "egui_glow"
 version = "0.27.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1986,6 +2008,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e4c3a552cfca14630702449d35f41c84a0d15963273771c6059175a803620f3f"
 dependencies = [
  "bytemuck",
+ "serde",
 ]
 
 [[package]]
@@ -1995,6 +2018,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "75030f3c4f45dafd7586dd6780965a8c7e8e285a5ecb86713e63a79c5b2766f3"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "enum-map"
+version = "2.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6866f3bfdf8207509a033af1a75a7b08abda06bbaaeae6669323fd5a097df2e9"
+dependencies = [
+ "enum-map-derive",
+ "serde",
+]
+
+[[package]]
+name = "enum-map-derive"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f282cfdfe92516eb26c2af8589c274c7c17681f5ecc03c18255fe741c6aa64eb"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.105",
 ]
 
 [[package]]
@@ -2019,6 +2063,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "enumn"
+version = "0.1.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2f9ed6b3789237c8a0c1c505af1c7eb2c560df6186f01b098c3a1064ea532f38"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.105",
+]
+
+[[package]]
 name = "epaint"
 version = "0.27.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2032,6 +2087,7 @@ dependencies = [
  "log",
  "nohash-hasher",
  "parking_lot",
+ "serde",
 ]
 
 [[package]]
@@ -3602,6 +3658,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "mime_guess2"
+version = "2.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1706dc14a2e140dec0a7a07109d9a3d5890b81e85bd6c60b906b249a77adf0ca"
+dependencies = [
+ "mime",
+ "phf",
+ "phf_shared",
+ "unicase",
+]
+
+[[package]]
 name = "minimal-lexical"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4125,6 +4193,50 @@ dependencies = [
 ]
 
 [[package]]
+name = "phf"
+version = "0.11.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1fd6780a80ae0c52cc120a26a1a42c1ae51b247a253e4e06113d23d2c2edd078"
+dependencies = [
+ "phf_macros",
+ "phf_shared",
+]
+
+[[package]]
+name = "phf_generator"
+version = "0.11.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c80231409c20246a13fddb31776fb942c38553c51e871f8cbd687a4cfb5843d"
+dependencies = [
+ "phf_shared",
+ "rand 0.8.5",
+]
+
+[[package]]
+name = "phf_macros"
+version = "0.11.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f84ac04429c13a7ff43785d75ad27569f2951ce0ffd30a3321230db2fc727216"
+dependencies = [
+ "phf_generator",
+ "phf_shared",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.105",
+ "unicase",
+]
+
+[[package]]
+name = "phf_shared"
+version = "0.11.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "67eabc2ef2a60eb7faa00097bd1ffdb5bd28e62bf39990626a582201b7a754e5"
+dependencies = [
+ "siphasher 1.0.1",
+ "unicase",
+]
+
+[[package]]
 name = "pico-args"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4640,6 +4752,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "rctree"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3b42e27ef78c35d3998403c1d26f3efd9e135d3e5121b0a4845cc5cc27547f4f"
+
+[[package]]
 name = "redox_syscall"
 version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4729,6 +4847,20 @@ checksum = "19b30a45b0cd0bcca8037f3d0dc3421eaf95327a17cad11964fb8179b4fc4832"
 
 [[package]]
 name = "resvg"
+version = "0.37.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cadccb3d99a9efb8e5e00c16fbb732cbe400db2ec7fc004697ee7d97d86cf1f4"
+dependencies = [
+ "log",
+ "pico-args",
+ "rgb",
+ "svgtypes 0.13.0",
+ "tiny-skia",
+ "usvg 0.37.0",
+]
+
+[[package]]
+name = "resvg"
 version = "0.39.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "16a15c715c5a88eedff8cd54e2821f39f6ee4345964fd48986c0615d5a24cbe5"
@@ -4739,9 +4871,9 @@ dependencies = [
  "pico-args",
  "png 0.17.16",
  "rgb",
- "svgtypes",
+ "svgtypes 0.14.0",
  "tiny-skia",
- "usvg",
+ "usvg 0.39.0",
 ]
 
 [[package]]
@@ -5258,6 +5390,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "38b58827f4464d87d377d175e90bf58eb00fd8716ff0a62f80356b5e61555d0d"
 
 [[package]]
+name = "siphasher"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56199f7ddabf13fe5074ce809e7d3f42b42ae711800501b5b16ea82ad029c39d"
+
+[[package]]
 name = "slab"
 version = "0.4.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5490,12 +5628,22 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 
 [[package]]
 name = "svgtypes"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e44e288cd960318917cbd540340968b90becc8bc81f171345d706e7a89d9d70"
+dependencies = [
+ "kurbo 0.9.5",
+ "siphasher 0.3.11",
+]
+
+[[package]]
+name = "svgtypes"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "59d7618f12b51be8171a7cfdda1e7a93f79cbc57c4e7adf89a749cf671125241"
 dependencies = [
  "kurbo 0.10.4",
- "siphasher",
+ "siphasher 0.3.11",
 ]
 
 [[package]]
@@ -6173,6 +6321,20 @@ dependencies = [
 
 [[package]]
 name = "usvg"
+version = "0.37.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38b0a51b72ab80ca511d126b77feeeb4fb1e972764653e61feac30adc161a756"
+dependencies = [
+ "base64 0.21.7",
+ "log",
+ "pico-args",
+ "usvg-parser",
+ "usvg-tree",
+ "xmlwriter",
+]
+
+[[package]]
+name = "usvg"
 version = "0.39.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e753216e7c0e49048a0c986ed9ad7284451844a21107374392aaa107ec805c9c"
@@ -6188,14 +6350,44 @@ dependencies = [
  "roxmltree 0.19.0",
  "rustybuzz",
  "simplecss",
- "siphasher",
+ "siphasher 0.3.11",
  "strict-num",
- "svgtypes",
+ "svgtypes 0.14.0",
  "tiny-skia-path",
  "unicode-bidi",
  "unicode-script",
  "unicode-vo",
  "xmlwriter",
+]
+
+[[package]]
+name = "usvg-parser"
+version = "0.37.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9bd4e3c291f45d152929a31f0f6c819245e2921bfd01e7bd91201a9af39a2bdc"
+dependencies = [
+ "data-url",
+ "flate2",
+ "imagesize",
+ "kurbo 0.9.5",
+ "log",
+ "roxmltree 0.19.0",
+ "simplecss",
+ "siphasher 0.3.11",
+ "svgtypes 0.13.0",
+ "usvg-tree",
+]
+
+[[package]]
+name = "usvg-tree"
+version = "0.37.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8ee3d202ebdb97a6215604b8f5b4d6ef9024efd623cf2e373a6416ba976ec7d3"
+dependencies = [
+ "rctree",
+ "strict-num",
+ "svgtypes 0.13.0",
+ "tiny-skia-path",
 ]
 
 [[package]]
