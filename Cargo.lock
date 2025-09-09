@@ -1295,7 +1295,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "chinese-chess-game"
+name = "chinese-chess"
 version = "0.1.0"
 dependencies = [
  "anyhow",
