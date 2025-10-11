@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-anyhow = "1.0.99"
-spring = "0.4.2"
-spring-web = "0.4.7"
+anyhow = "1.0.100"
+spring = "0.4.5"
+spring-web = "0.4.8"
 tokio = "1.47.1"

@@ -1,6 +1,7 @@
 use anyhow::Result;
 use eframe::egui;
 use egui_extras::image::load_svg_bytes;
+use resvg::usvg;
 use std::collections::HashMap;
 use std::env;
 use std::path::PathBuf;
@@ -17,7 +18,7 @@ fn main() -> Result<(), eframe::Error> {
         Box::new(|cc| {
             let mut app = ChineseChessApp::default();
             app.load_textures(&cc.egui_ctx);
-            Box::new(app)
+            Ok(Box::new(app))
         }),
     )
 }
@@ -303,6 +304,7 @@ impl eframe::App for ChineseChessApp {
                                 rect,
                                 0.0,
                                 egui::Stroke::new(1.0, egui::Color32::GREEN),
+                                egui::StrokeKind::Inside,
                             );
 
                             painter.image(
@@ -389,7 +391,8 @@ impl ChineseChessApp {
             // Try to load SVG file
             if let Ok(svg_bytes) = std::fs::read(&svg_path) {
                 println!("Loading SVG file: {:?}", svg_path);
-                match load_svg_bytes(&svg_bytes) {
+                let options = usvg::Options::default();
+                match load_svg_bytes(&svg_bytes, &options) {
                     Ok(image) => {
                         let texture = ctx.load_texture(name, image, egui::TextureOptions::LINEAR);
                         self.textures.insert(name.to_string(), texture);
@@ -411,7 +414,7 @@ impl ChineseChessApp {
 
     fn create_test_texture(&mut self, ctx: &egui::Context, name: &str) {
         // Create a more visible test pattern with different colors and patterns
-        let mut image = egui::ColorImage::new([100, 100], egui::Color32::TRANSPARENT);
+        let mut image = egui::ColorImage::new([100, 100], vec![egui::Color32::TRANSPARENT]);
 
         // Different patterns based on piece type for better visibility
         for y in 0..100 {
