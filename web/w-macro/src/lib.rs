@@ -165,6 +165,9 @@ pub fn repository(input: TokenStream) -> TokenStream {
             rbatis: rbatis::RBatis,
         }
 
+        unsafe impl Sync for #impl_repo {}
+        unsafe impl Send for #impl_repo {}
+
         impl #impl_repo {
             fn executor(&self) -> &dyn rbatis::executor::Executor {
                 &self.rbatis
