@@ -1,10 +1,8 @@
 use std::any;
 
-use crate::infra::repository::*;
-
-use crate::domain::content::Article;
+use crate::domain::content::*;
 
 pub fn create_article(model: Article) -> anyhow::Result<Article> {
-    let repository = crate::infra::repository::article()?;
+    let repository = article()?;
     repository.create(model)
 }

@@ -9,6 +9,8 @@ anyhow = "1.0.100"
 chrono = "0.4.42"
 clap = { version = "4.5.48", features = ["derive"] }
 config = "0.15.18"
+ctor = "0.6.0"
+dtor = "0.1.0"
 log = "0.4.28"
 rbatis = "4.6.8"
 rbdc-sqlite = "4.6.1"

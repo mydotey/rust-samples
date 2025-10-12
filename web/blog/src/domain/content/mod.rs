@@ -1,4 +1,3 @@
-use actix_web::test;
 use serde::{Deserialize, Serialize};
 use w_ddd::repository::Repository;
 use w_macro::{Entity, entity_field, entity_fields};
@@ -11,6 +10,22 @@ use w_macro::{Entity, entity_field, entity_fields};
 pub struct Article {}
 
 pub trait ArticleRepository: Repository<Article> {}
+
+pub static ARTICLE_REPOSITORY: Option<
+    std::sync::LazyLock<anyhow::Result<Box<dyn ArticleRepository>>>,
+> = None;
+
+pub fn article() -> anyhow::Result<&'static dyn ArticleRepository> {
+    match ARTICLE_REPOSITORY.as_ref() {
+        None => Err(anyhow::anyhow!("not inited")),
+        Some(v) => unsafe {
+            match v.as_ref() {
+                Ok(r) => Ok(r.as_ref()),
+                Err(e) => Err(anyhow::anyhow!("error: {}", e)),
+            }
+        },
+    }
+}
 
 #[cfg(test)]
 mod tests {
