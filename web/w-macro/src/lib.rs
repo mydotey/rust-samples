@@ -155,7 +155,11 @@ pub fn derive_entity(item: TokenStream) -> TokenStream {
 #[proc_macro]
 pub fn repository(input: TokenStream) -> TokenStream {
     let ty = input.to_string();
+    let factory_method = to_factory_method(&ty);
+    let global_var = to_global_var(&ty);
+    let init_method = to_init_method(&ty);
     let entity_type = format_ident!("{}", ty);
+    let repo = format_ident!("{}Repository", ty);
     let impl_repo = format_ident!("Default{}Repository", ty);
 
     quote! {
@@ -163,6 +167,21 @@ pub fn repository(input: TokenStream) -> TokenStream {
 
         struct #impl_repo {
             rbatis: rbatis::RBatis,
+        }
+
+        pub fn #factory_method() -> anyhow::Result<Box<dyn #repo>> {
+            Ok(Box::new(#impl_repo {
+                rbatis: crate::infra::db::get_rbatis()?,
+            }))
+        }
+
+        #[ctor::ctor]
+        fn #init_method() {
+            unsafe {
+                let r = &raw const #global_var
+                    as *mut Option<std::sync::LazyLock<anyhow::Result<Box<dyn #repo>>>>;
+                r.replace(Some(std::sync::LazyLock::new(#factory_method)));
+            }
         }
 
         unsafe impl Sync for #impl_repo {}
@@ -295,23 +314,54 @@ pub fn repository(input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
-pub fn repository_factory(input: TokenStream) -> TokenStream {
+pub fn repository_trait(input: TokenStream) -> TokenStream {
     let ty = input.to_string();
-    let method = to_method(&ty);
+    let repo = format_ident!("{}Repository", ty);
+
+    quote! {
+        pub trait #repo: w_ddd::repository::Repository<Article> {}
+    }
+    .into()
+}
+
+#[proc_macro]
+pub fn impl_repository_trait(input: TokenStream) -> TokenStream {
+    let ty = input.to_string();
     let repo = format_ident!("{}Repository", ty);
     let impl_repo = format_ident!("Default{}Repository", ty);
 
     quote! {
-        pub fn #method() -> anyhow::Result<Box<dyn #repo>> {
-            Ok(Box::new(#impl_repo {
-                rbatis: crate::infra::db::get_rbatis()?,
-            }))
+        impl #repo for #impl_repo {}
+    }
+    .into()
+}
+
+#[proc_macro]
+pub fn repository_factory(input: TokenStream) -> TokenStream {
+    let ty = input.to_string();
+    let global_var = to_global_var(&ty);
+    let factory_method = to_factory_method(&ty);
+    let repo = format_ident!("{}Repository", ty);
+
+    quote! {
+        pub static #global_var: Option<std::sync::LazyLock<anyhow::Result<Box<dyn #repo>>>> = None;
+
+        pub fn #factory_method() -> anyhow::Result<&'static dyn #repo> {
+            match #global_var.as_ref() {
+                Some(v) => unsafe {
+                    match v.as_ref() {
+                        Ok(r) => Ok(r.as_ref()),
+                        Err(e) => Err(anyhow::anyhow!("error: {}", e)),
+                    }
+                },
+                None => Err(anyhow::anyhow!("not inited")),
+            }
         }
     }
     .into()
 }
 
-fn to_method(s: &String) -> syn::Ident {
+fn to_factory_method(s: &String) -> syn::Ident {
     let mut parts: Vec<String> = vec![];
     let mut part = String::new();
     for c in s.chars() {
@@ -328,6 +378,44 @@ fn to_method(s: &String) -> syn::Ident {
     }
     let method = parts.join("_");
     format_ident!("{}", method)
+}
+
+fn to_init_method(s: &String) -> syn::Ident {
+    let mut parts: Vec<String> = vec![];
+    let mut part = String::new();
+    for c in s.chars() {
+        if c.is_uppercase() {
+            if !part.is_empty() && !part.chars().last().unwrap().is_uppercase() {
+                parts.push(part.to_lowercase());
+                part.clear();
+            }
+        }
+        part.push(c);
+    }
+    if !part.is_empty() {
+        parts.push(part.to_lowercase());
+    }
+    let method = parts.join("_");
+    format_ident!("init_{}_repository", method)
+}
+
+fn to_global_var(s: &String) -> syn::Ident {
+    let mut parts: Vec<String> = vec![];
+    let mut part = String::new();
+    for c in s.chars() {
+        if c.is_uppercase() {
+            if !part.is_empty() && !part.chars().last().unwrap().is_uppercase() {
+                parts.push(part.to_lowercase());
+                part.clear();
+            }
+        }
+        part.push(c);
+    }
+    if !part.is_empty() {
+        parts.push(part.to_uppercase());
+    }
+    let global_var = parts.join("_");
+    format_ident!("{}_REPOSITORY", global_var)
 }
 
 #[cfg(test)]
