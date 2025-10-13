@@ -163,6 +163,8 @@ pub fn repository(input: TokenStream) -> TokenStream {
     let impl_repo = format_ident!("Default{}Repository", ty);
 
     quote! {
+        use w_ddd::entity::Entity;
+
         rbatis::crud!(#entity_type {});
 
         struct #impl_repo {
@@ -201,9 +203,9 @@ pub fn repository(input: TokenStream) -> TokenStream {
             fn create(&self, entity: #entity_type) -> anyhow::Result<#entity_type> {
                 let mut entity = entity;
                 let now = chrono::Local::now().timestamp();
-                entity.create_time = Some(now);
-                entity.update_time = Some(now);
-                entity.version = Some(0);
+                entity.set_create_time(Some(now));
+                entity.set_update_time(Some(now));
+                entity.set_version(Some(0));
                 let waker = std::task::Waker::noop();
                 let mut cx = std::task::Context::from_waker(waker);
                 let mut future = std::pin::pin!(#entity_type::insert(self.executor(), &entity));
@@ -212,7 +214,7 @@ pub fn repository(input: TokenStream) -> TokenStream {
                         return r
                             .map(|r| {
                                 let mut e = entity.clone();
-                                e.id = r.last_insert_id.as_i64();
+                                e.set_id(r.last_insert_id.as_i64());
                                 return e;
                             })
                             .map_err(|e| {
@@ -257,7 +259,7 @@ pub fn repository(input: TokenStream) -> TokenStream {
                 let mut future = std::pin::pin!(#entity_type::update_by_map(
                     self.executor(),
                     &entity,
-                    rbs::value! { "id": entity.id}
+                    rbs::value! { "id": entity.get_id()}
                 ));
                 loop {
                     if let std::task::Poll::Ready(r) = future.as_mut().poll(&mut cx) {
@@ -268,14 +270,14 @@ pub fn repository(input: TokenStream) -> TokenStream {
                             0 => Err(anyhow::anyhow!(
                                 "record of {} with id {:?} not found",
                                 self.table_name(),
-                                entity.id
+                                entity.get_id()
                             )),
                             1 => Ok(()),
                             _ => Err(anyhow::anyhow!(
                                 "{} records of {} found with id {:?}",
                                 r.rows_affected,
                                 self.table_name(),
-                                entity.id
+                                entity.get_id()
                             )),
                         };
                     }
