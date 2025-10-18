@@ -425,17 +425,20 @@ mod tests {
     use super::*;
     #[test]
     fn test_to_method() {
-        assert_eq!(to_method(&"Article".to_string()).to_string(), "article");
         assert_eq!(
-            to_method(&"ArticleRepository".to_string()).to_string(),
+            to_factory_method(&"Article".to_string()).to_string(),
+            "article"
+        );
+        assert_eq!(
+            to_factory_method(&"ArticleRepository".to_string()).to_string(),
             "article_repository"
         );
         assert_eq!(
-            to_method(&"DefaultArticleRepository".to_string()).to_string(),
+            to_factory_method(&"DefaultArticleRepository".to_string()).to_string(),
             "default_article_repository"
         );
         assert_eq!(
-            to_method(&"DefaultArticleRepository2".to_string()).to_string(),
+            to_factory_method(&"DefaultArticleRepository2".to_string()).to_string(),
             "default_article_repository2"
         );
     }
