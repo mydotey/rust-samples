@@ -980,6 +980,7 @@ version = "0.1.0"
 dependencies = [
  "actix-web",
  "anyhow",
+ "blog-client",
  "chrono",
  "clap",
  "config",
@@ -993,6 +994,13 @@ dependencies = [
  "simple_logger",
  "w-ddd",
  "w-macro",
+]
+
+[[package]]
+name = "blog-client"
+version = "0.1.0"
+dependencies = [
+ "serde",
 ]
 
 [[package]]
@@ -6290,6 +6298,8 @@ name = "w-ddd"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

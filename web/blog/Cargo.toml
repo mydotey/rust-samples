@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 actix-web = "4.11.0"
 anyhow = "1.0.100"
+blog-client = { version = "0.1.0", path = "../blog-client" }
 chrono = "0.4.42"
 clap = { version = "4.5.48", features = ["derive"] }
 config = "0.15.18"
