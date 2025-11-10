@@ -1,10 +1,11 @@
-use std::f64::consts::E;
+use std::panic::{RefUnwindSafe, UnwindSafe, catch_unwind};
 use std::sync::LazyLock;
 
 use actix_web::dev::{HttpServiceFactory, ServiceFactory, ServiceRequest};
 use actix_web::web;
 use actix_web::{App, Error};
 use anyhow::Result;
+use blog_client::DtoConstraint;
 use rbatis::rbdc::Json;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -30,13 +31,14 @@ where
     mapper::default::<From, To>().map(&json.into_inner())
 }
 
-pub fn handle_request<Dto, Entity>(
-    json: web::Json<Dto>,
-    handler: &dyn Fn(Entity) -> Result<Entity>,
-) -> Result<Entity>
+pub fn handle_request<Dto, Entity, F>(json: web::Json<Dto>, handler: F) -> Result<Entity>
 where
-    Dto: 'static + Serialize,
-    Entity: 'static + DeserializeOwned,
+    Dto: DtoConstraint,
+    Entity: DtoConstraint,
+    F: Fn(Entity) -> Result<Entity> + UnwindSafe + RefUnwindSafe,
 {
-    handler(map(json)?)
+    match catch_unwind(move || handler(map(json)?)) {
+        Ok(r) => r,
+        Err(e) => Err(anyhow::anyhow!("Failed to handle request: {:?}", e)),
+    }
 }

@@ -23,7 +23,7 @@ pub async fn manual_hello() -> impl Responder {
 
 #[post("/api/entity/article/create")]
 pub async fn create_article(json: Json<CreateArticleDto>) -> impl Responder {
-    match handle_request(json, &crate::service::article::create_article) {
+    match handle_request(json, crate::service::article::create_article) {
         Ok(model) => HttpResponse::Created().json(model),
         Err(e) => {
             error!("Failed to create article: {}", e);

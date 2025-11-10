@@ -1,4 +1,7 @@
-use std::fmt::{Debug, Display};
+use std::{
+    fmt::{Debug, Display},
+    panic::UnwindSafe,
+};
 
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 
@@ -7,9 +10,15 @@ pub mod content;
 pub type BasicRequest = DtoRequest<()>;
 pub type BasicResponse = DtoResponse<()>;
 
-pub trait DtoConstraint: Debug + Clone + Default + Serialize + DeserializeOwned {}
+pub trait DtoConstraint:
+    Debug + Clone + Default + Serialize + DeserializeOwned + Send + Sync + UnwindSafe + 'static
+{
+}
 
-impl<T: Debug + Clone + Default + Serialize + DeserializeOwned> DtoConstraint for T {}
+impl<T: Debug + Clone + Default + Serialize + DeserializeOwned + Send + Sync + UnwindSafe + 'static>
+    DtoConstraint for T
+{
+}
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct DtoRequest<T> {
@@ -25,6 +34,9 @@ impl<T: DtoConstraint> DtoRequest<T> {
         self.data = data
     }
 }
+
+unsafe impl<T: DtoConstraint> Sync for DtoRequest<T> {}
+unsafe impl<T: DtoConstraint> Send for DtoRequest<T> {}
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct DtoResponse<T> {
@@ -46,6 +58,9 @@ impl<T: DtoConstraint> DtoResponse<T> {
         self.data = data
     }
 }
+
+unsafe impl<T: DtoConstraint> Sync for DtoResponse<T> {}
+unsafe impl<T: DtoConstraint> Send for DtoResponse<T> {}
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ResponseStatus {
@@ -88,3 +103,6 @@ impl Display for ResponseStatus {
         )
     }
 }
+
+unsafe impl Sync for ResponseStatus {}
+unsafe impl Send for ResponseStatus {}
